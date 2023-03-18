@@ -8,10 +8,13 @@ import com.google.common.eventbus.Subscribe;
 
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModMetadata;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.versioning.VersionParser;
 import cpw.mods.fml.common.versioning.VersionRange;
+import glowredman.txloader.progress.ProgressBarProxy;
 
 public class TXLoaderModContainer extends DummyModContainer {
 
@@ -46,6 +49,11 @@ public class TXLoaderModContainer extends DummyModContainer {
     public boolean registerBus(EventBus bus, LoadController controller) {
         bus.register(this);
         return true;
+    }
+
+    @Subscribe
+    public void preInit(FMLPreInitializationEvent event) {
+        ProgressBarProxy.isBLSLoaded = Loader.isModLoaded("betterloadingscreen");
     }
 
     @Subscribe

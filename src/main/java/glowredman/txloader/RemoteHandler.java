@@ -18,11 +18,10 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.gson.JsonSyntaxException;
 
-import cpw.mods.fml.common.ProgressManager;
-import cpw.mods.fml.common.ProgressManager.ProgressBar;
 import glowredman.txloader.Asset.Source;
+import glowredman.txloader.progress.IProgressBar;
+import glowredman.txloader.progress.ProgressBarProxy;
 
-@SuppressWarnings("deprecation")
 class RemoteHandler {
 
     static String latestRelease;
@@ -50,7 +49,7 @@ class RemoteHandler {
     static void getAssets() {
         final Map<JVersionDetails, Map<String, JAsset>> assets = new HashMap<>();
         final Map<String, JVersionDetails> versionDetailsCache = new HashMap<>();
-        final ProgressBar bar = ProgressManager.push("Loading Remote Assets", TXLoaderCore.REMOTE_ASSETS.size());
+        final IProgressBar bar = ProgressBarProxy.get("Loading Remote Assets", TXLoaderCore.REMOTE_ASSETS.size());
         int added = 0;
         int skipped = 0;
         int failed = 0;
@@ -131,7 +130,7 @@ class RemoteHandler {
             added++;
         }
         TXLoaderCore.LOGGER.info("Successfully added {} assets. ({} skipped, {} failed)", added, skipped, failed);
-        ProgressManager.pop(bar);
+        bar.pop();
     }
 
     private static JVersionManifest downloadManifest() throws JsonSyntaxException, IOException {
