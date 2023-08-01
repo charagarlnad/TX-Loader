@@ -19,8 +19,24 @@ class JarHandler {
 
     static void indexJars() {
         String userHome = System.getProperty("user.home");
-        txloaderCache = Paths.get(userHome, "txloader");
-
+        String system = System.getProperty("os.name").toLowerCase();
+        if(system.contains("win")) {
+            String temp = System.getenv("TEMP");
+            if(temp == null){
+                txloaderCache = Paths.get(userHome,"AppData","Local","Temp","txloader");
+            } else {
+                txloaderCache = Paths.get(temp, "txloader");
+            }
+        } else if(system.contains("mac")) {
+            txloaderCache = Paths.get(userHome,"Caches", "txloader");
+        } else {
+            String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
+            if(xdgCacheHome == null){
+                txloaderCache = Paths.get(userHome, ".cache", "txloader");
+            } else {
+                txloaderCache = Paths.get(xdgCacheHome, "txloader");
+            }
+        }
         List<Pair<Path, String>> clientLocations = new ArrayList<>();
         clientLocations.add(Pair.of(txloaderCache, "client.jar"));
         clientLocations.add(Pair.of(Paths.get(userHome, "AppData", "Roaming", ".minecraft", "versions"), "%s.jar"));
