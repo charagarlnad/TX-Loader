@@ -20,18 +20,18 @@ class JarHandler {
     static void indexJars() {
         String userHome = System.getProperty("user.home");
         String system = System.getProperty("os.name").toLowerCase();
-        if(system.contains("win")) {
+        if (system.contains("win")) {
             String temp = System.getenv("TEMP");
-            if(temp == null){
-                txloaderCache = Paths.get(userHome,"AppData","Local","Temp","txloader");
+            if (temp == null) {
+                txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
             } else {
                 txloaderCache = Paths.get(temp, "txloader");
             }
-        } else if(system.contains("mac")) {
-            txloaderCache = Paths.get(userHome,"Caches", "txloader");
+        } else if (system.contains("mac")) {
+            txloaderCache = Paths.get(userHome, "Caches", "txloader");
         } else {
             String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
-            if(xdgCacheHome == null){
+            if (xdgCacheHome == null) {
                 txloaderCache = Paths.get(userHome, ".cache", "txloader");
             } else {
                 txloaderCache = Paths.get(xdgCacheHome, "txloader");
