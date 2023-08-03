@@ -22,10 +22,13 @@ class JarHandler {
         String system = System.getProperty("os.name").toLowerCase();
         if (system.contains("win")) {
             String temp = System.getenv("TEMP");
-            if (temp == null) {
-                txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
-            } else {
+            String localAppData = System.getenv("LOCALAPPDATA");
+            if (temp != null) {
                 txloaderCache = Paths.get(temp, "txloader");
+            } else if (localAppData != null) {
+                txloaderCache = Paths.get(localAppData, "Temp", "txloader");
+            } else {
+                txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
             }
         } else if (system.contains("mac")) {
             txloaderCache = Paths.get(userHome, "Caches", "txloader");
