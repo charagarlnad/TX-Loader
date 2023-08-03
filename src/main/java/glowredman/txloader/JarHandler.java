@@ -31,7 +31,7 @@ class JarHandler {
                 txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
             }
         } else if (system.contains("mac")) {
-            txloaderCache = Paths.get(userHome, "Caches", "txloader");
+            txloaderCache = Paths.get(userHome, "Library", "Caches", "txloader");
         } else {
             String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
             if (xdgCacheHome == null) {
