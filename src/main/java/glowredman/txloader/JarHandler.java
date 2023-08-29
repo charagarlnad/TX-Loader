@@ -55,7 +55,7 @@ class JarHandler {
                 Pair.of(Paths.get(userHome, ".gradle", "caches", "retro_futura_gradle", "mc-vanilla"), "client.jar"));
 
         List<Pair<Path, String>> serverLocations = new ArrayList<>();
-        clientLocations.add(Pair.of(txloaderCache, "server.jar"));
+        serverLocations.add(Pair.of(txloaderCache, "server.jar"));
         serverLocations.add(
                 Pair.of(
                         Paths.get(userHome, ".gradle", "caches", "forge_gradle", "minecraft_repo", "versions"),
