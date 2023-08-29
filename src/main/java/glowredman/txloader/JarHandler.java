@@ -1,14 +1,24 @@
 package glowredman.txloader;
 
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.base.Stopwatch;
+import cpw.mods.fml.relauncher.Side;
 
 class JarHandler {
 
@@ -67,23 +77,50 @@ class JarHandler {
         serverLocations.add(
                 Pair.of(Paths.get(userHome, ".gradle", "caches", "retro_futura_gradle", "mc-vanilla"), "server.jar"));
 
-        for (String version : RemoteHandler.VERSIONS.keySet()) {
-            for (Pair<Path, String> location : clientLocations) {
-                Path jarPath = location.getLeft().resolve(version).resolve(String.format(location.getRight(), version));
-                if (Files.exists(jarPath)) {
-                    CACHED_CLIENT_JARS.put(version, jarPath);
-                    TXLoaderCore.LOGGER.debug("Found CLIENT jar for version {} at {}", version, jarPath);
-                    break;
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        for (Pair<Path, String> location : clientLocations) {
+            collect(location.getLeft(), location.getRight(), Side.CLIENT);
+        }
+        for (Pair<Path, String> location : serverLocations) {
+            collect(location.getLeft(), location.getRight(), Side.SERVER);
+        }
+        TXLoaderCore.LOGGER.debug("Scan for jars took {}ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    }
+
+    private static void collect(Path start, String fileName, Side side) {
+        if (!Files.isDirectory(start)) return;
+        try {
+            Files.walkFileTree(start, EnumSet.of(FileVisitOption.FOLLOW_LINKS), 2, new SimpleFileVisitor<Path>() {
+
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (!Files.isSameFile(dir, start)
+                            && !RemoteHandler.VERSIONS.containsKey(dir.getFileName().toString())) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    return FileVisitResult.CONTINUE;
                 }
-            }
-            for (Pair<Path, String> location : serverLocations) {
-                Path jarPath = location.getLeft().resolve(version).resolve(String.format(location.getRight(), version));
-                if (Files.exists(jarPath)) {
-                    CACHED_SERVER_JARS.put(version, jarPath);
-                    TXLoaderCore.LOGGER.debug("Found SERVER jar for version {} at {}", version, jarPath);
-                    break;
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Path parent = file.getParent();
+                    if (Files.isSameFile(parent, start) || !attrs.isRegularFile() || attrs.size() <= 1024) {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    String version = parent.getFileName().toString();
+                    if (!String.format(fileName, version).equals(file.getFileName().toString())) {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    if (side.isClient()) CACHED_CLIENT_JARS.put(version, file);
+                    else CACHED_SERVER_JARS.put(version, file);
+                    TXLoaderCore.LOGGER.debug("Found {} jar for version {} at {}", side, version, file);
+                    return FileVisitResult.SKIP_SIBLINGS;
                 }
-            }
+            });
+        } catch (IOException e) {
+            TXLoaderCore.LOGGER.debug("Cannot walk cache directory {}", start, e);
         }
     }
 
