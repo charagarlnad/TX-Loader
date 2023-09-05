@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Stopwatch;
+
 import cpw.mods.fml.relauncher.Side;
 
 class JarHandler {
@@ -30,24 +31,33 @@ class JarHandler {
     static void indexJars() {
         String userHome = System.getProperty("user.home");
         String system = System.getProperty("os.name").toLowerCase();
-        if (system.contains("win")) {
-            String temp = System.getenv("TEMP");
-            String localAppData = System.getenv("LOCALAPPDATA");
-            if (temp != null) {
-                txloaderCache = Paths.get(temp, "txloader");
-            } else if (localAppData != null) {
-                txloaderCache = Paths.get(localAppData, "Temp", "txloader");
+        try {
+            if (system.contains("win")) {
+                String temp = System.getenv("TEMP");
+                String localAppData = System.getenv("LOCALAPPDATA");
+                if (temp != null) {
+                    txloaderCache = Paths.get(temp, "txloader");
+                } else if (localAppData != null) {
+                    txloaderCache = Paths.get(localAppData, "Temp", "txloader");
+                } else {
+                    txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
+                }
+            } else if (system.contains("mac")) {
+                txloaderCache = Paths.get(userHome, "Library", "Caches", "txloader");
             } else {
-                txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
+                String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
+                if (xdgCacheHome == null) {
+                    txloaderCache = Paths.get(userHome, ".cache", "txloader");
+                } else {
+                    txloaderCache = Paths.get(xdgCacheHome, "txloader");
+                }
             }
-        } else if (system.contains("mac")) {
-            txloaderCache = Paths.get(userHome, "Library", "Caches", "txloader");
-        } else {
-            String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
-            if (xdgCacheHome == null) {
-                txloaderCache = Paths.get(userHome, ".cache", "txloader");
+        } catch (InvalidPathException e) {
+            TXLoaderCore.LOGGER.debug("Create Error: {}\nUse the default cache location! ", e.getMessage());
+            if (system.contains("win")) {
+                txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
             } else {
-                txloaderCache = Paths.get(xdgCacheHome, "txloader");
+                txloaderCache = Paths.get(userHome, ".cache", "txloader");
             }
         }
         List<Pair<Path, String>> clientLocations = new ArrayList<>();
