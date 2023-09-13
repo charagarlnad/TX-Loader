@@ -1,12 +1,7 @@
 package glowredman.txloader;
 
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -18,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Stopwatch;
-
 import cpw.mods.fml.relauncher.Side;
 
 class JarHandler {
@@ -53,12 +47,15 @@ class JarHandler {
                 }
             }
         } catch (InvalidPathException e) {
-            TXLoaderCore.LOGGER.debug("Create Error: {}\nUse the default cache location! ", e.getMessage());
             if (system.contains("win")) {
                 txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
             } else {
                 txloaderCache = Paths.get(userHome, ".cache", "txloader");
             }
+            TXLoaderCore.LOGGER.warn(
+                    "Error occurred while txloader cache path was created: {}. The environment variable TEMP or LOCALAPPDATA could be set incorrectly. Use the default cache location: {}",
+                    e,
+                    txloaderCache);
         }
         List<Pair<Path, String>> clientLocations = new ArrayList<>();
         clientLocations.add(Pair.of(txloaderCache, "client.jar"));
