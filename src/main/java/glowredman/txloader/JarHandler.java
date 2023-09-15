@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -30,25 +31,37 @@ class JarHandler {
     static void indexJars() {
         String userHome = System.getProperty("user.home");
         String system = System.getProperty("os.name").toLowerCase();
-        if (system.contains("win")) {
-            String temp = System.getenv("TEMP");
-            String localAppData = System.getenv("LOCALAPPDATA");
-            if (temp != null) {
-                txloaderCache = Paths.get(temp, "txloader");
-            } else if (localAppData != null) {
-                txloaderCache = Paths.get(localAppData, "Temp", "txloader");
+        try {
+            if (system.contains("win")) {
+                String temp = System.getenv("TEMP");
+                String localAppData = System.getenv("LOCALAPPDATA");
+                if (temp != null) {
+                    txloaderCache = Paths.get(temp, "txloader");
+                } else if (localAppData != null) {
+                    txloaderCache = Paths.get(localAppData, "Temp", "txloader");
+                } else {
+                    txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
+                }
+            } else if (system.contains("mac")) {
+                txloaderCache = Paths.get(userHome, "Library", "Caches", "txloader");
             } else {
+                String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
+                if (xdgCacheHome == null) {
+                    txloaderCache = Paths.get(userHome, ".cache", "txloader");
+                } else {
+                    txloaderCache = Paths.get(xdgCacheHome, "txloader");
+                }
+            }
+        } catch (InvalidPathException e) {
+            if (system.contains("win")) {
                 txloaderCache = Paths.get(userHome, "AppData", "Local", "Temp", "txloader");
-            }
-        } else if (system.contains("mac")) {
-            txloaderCache = Paths.get(userHome, "Library", "Caches", "txloader");
-        } else {
-            String xdgCacheHome = System.getenv("XDG_CACHE_HOME");
-            if (xdgCacheHome == null) {
-                txloaderCache = Paths.get(userHome, ".cache", "txloader");
             } else {
-                txloaderCache = Paths.get(xdgCacheHome, "txloader");
+                txloaderCache = Paths.get(userHome, ".cache", "txloader");
             }
+            TXLoaderCore.LOGGER.warn(
+                    "An error occurred while the TXLoader cache path was created. The environment variable TEMP or LOCALAPPDATA could be set incorrectly. Using the default cache location: "
+                            + txloaderCache,
+                    e);
         }
         List<Pair<Path, String>> clientLocations = new ArrayList<>();
         clientLocations.add(Pair.of(txloaderCache, "client.jar"));
