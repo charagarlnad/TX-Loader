@@ -33,8 +33,7 @@ public class MinecraftClassTransformer implements IClassTransformer {
         for (MethodNode mn : classNode.methods) {
             if (mn.name.equals(targetMethodName) && mn.desc.equals("()V")) {
                 for (AbstractInsnNode node : mn.instructions.toArray()) {
-                    if (node instanceof MethodInsnNode && ((MethodInsnNode) node).name.equals(targetMethodInsnName)
-                            && ((MethodInsnNode) node).desc.equals("(Ljava/util/List;)V")) {
+                    if (isTargetNode(node, targetMethodInsnName)) {
                         mn.instructions.insertBefore(
                                 node,
                                 new MethodInsnNode(
@@ -54,6 +53,11 @@ public class MinecraftClassTransformer implements IClassTransformer {
         final ClassWriter classWriter = new ClassWriter(0);
         classNode.accept(classWriter);
         return classWriter.toByteArray();
+    }
+
+    private static boolean isTargetNode(AbstractInsnNode node, String name) {
+        return node instanceof MethodInsnNode && ((MethodInsnNode) node).name.equals(name)
+                && ((MethodInsnNode) node).desc.equals("(Ljava/util/List;)V");
     }
 
 }
