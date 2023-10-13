@@ -26,7 +26,7 @@ public class MinecraftClassTransformer implements IClassTransformer {
         final boolean devEnv = (boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
         final ClassNode classNode = new ClassNode();
         final ClassReader classReader = new ClassReader(basicClass);
-        classReader.accept(classNode, ClassReader.SKIP_DEBUG);
+        classReader.accept(classNode, 0);
         final String targetMethodName = devEnv ? "refreshResources" : "func_110436_a";
         final String targetMethodInsnName = devEnv ? "reloadResources" : "func_110541_a";
         boolean success = false;
