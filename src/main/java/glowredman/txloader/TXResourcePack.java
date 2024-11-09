@@ -6,9 +6,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,22 +22,22 @@ import cpw.mods.fml.common.ModContainer;
 public class TXResourcePack implements IResourcePack {
 
     private final String name;
-    private final Path dir;
+    private final String dir;
 
-    private TXResourcePack(String name, Path dir) {
+    private TXResourcePack(String name, String dir) {
         this.name = name;
         this.dir = dir;
     }
 
     @Override
     public InputStream getInputStream(ResourceLocation rl) throws IOException {
-        return new FileInputStream(this.getResourcePath(rl).toFile());
+        return new FileInputStream(this.getResourcePath(rl));
     }
 
     @Override
     public boolean resourceExists(ResourceLocation rl) {
         try {
-            return Files.exists(this.getResourcePath(rl));
+            return (new File(this.getResourcePath(rl))).isFile();
         } catch (InvalidPathException e) {
             /*
              * Some mods load resources dynamically by id. (example: java.nio.file.InvalidPathException: Illegal char
@@ -59,7 +57,7 @@ public class TXResourcePack implements IResourcePack {
             RemoteHandler.getAssets();
         }
 
-        File[] subDirs = this.dir.toFile().listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
+        File[] subDirs = new File(this.dir).listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
         Set<String> resourceDomains = new HashSet<>();
         for (File f : subDirs) {
             resourceDomains.add(f.getName());
@@ -82,14 +80,14 @@ public class TXResourcePack implements IResourcePack {
         return this.name;
     }
 
-    private Path getResourcePath(ResourceLocation rl) {
-        return this.dir.resolve(rl.getResourceDomain()).resolve(rl.getResourcePath());
+    private String getResourcePath(ResourceLocation rl) {
+        return this.dir + "/" + rl.getResourceDomain() + "/" + rl.getResourcePath();
     }
 
     public static class Normal extends TXResourcePack {
 
         public Normal(ModContainer modContainer) {
-            super("TX Loader Resources", TXLoaderCore.resourcesDir.toPath());
+            super("TX Loader Resources", TXLoaderCore.resourcesDir.toString());
             TXLoaderCore.resourcesDir.mkdir();
         }
     }
@@ -97,7 +95,7 @@ public class TXResourcePack implements IResourcePack {
     public static class Force extends TXResourcePack {
 
         public Force() {
-            super("TX Loader Forced Resources", TXLoaderCore.forceResourcesDir.toPath());
+            super("TX Loader Forced Resources", TXLoaderCore.forceResourcesDir.toString());
             TXLoaderCore.forceResourcesDir.mkdir();
         }
     }
